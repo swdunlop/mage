@@ -148,6 +148,8 @@ func checkFns(fns []interface{}) []funcType {
 //     func(context.Context) error
 // Or a similar method on a mg.Namespace type.
 //
+// You may also use types that implement Dependency.
+//
 // This is a way to build up a tree of dependencies with each dependency
 // defining its own dependencies.  Functions must have the same signature as a
 // Mage target, i.e. optional context argument, optional error return.

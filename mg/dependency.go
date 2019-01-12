@@ -2,64 +2,74 @@ package mg
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 )
 
+// A Dependency is a requirement provided to Deps or ContextDeps.  Since
+// multiple targets may have the same requirement, dependencies must protect
+// themselves from being run repeatedly.  When targets are used as dependencies,
+// mg.Deps and mg.ContextDeps will automatically use an internal map of target
+// dependencies to prevent repeated runs.
 type Dependency interface {
-	// RunDependency should run a dependency no more than once.  The easy way to do this is to
-	// use sync.Once to guard against repeated attempts to run a dependency.  Targets supplied
-	// to mg.Deps and mg.ContextDeps are converted to Dependency using FuncDep.
+	// RunDependency should run a dependency no more than once.  The easy way to
+	// do this is to use sync.Once to guard against repeated attempts to run a
+	// dependency.
 	RunDependency(ctx context.Context) error
 }
 
-// newFuncDep creates a Dependency using the provided function using funcDep with the address
-// of the function and a wrapper.
-func newFuncDep(target interface{}) Dependency {
-	var addr uintptr
+// makeDependency converts the provided value to a dependency, if needed, or
+// returns an error.
+func makeDependency(target interface{}) (Dependency, error) {
+	//TODO(swdunlop): we should detect methods and warn the user that this will
+	// not do what they think it will do.
+	var id string
 	var fn func(context.Context) error
-	switch run := target.(type) {
+	switch target := target.(type) {
 	case Dependency:
-		return run
+		return target, nil
 	case func(context.Context) error:
-		addr, fn = resolveFuncAddr(run), run
+		id, fn = name(target), target
 	case func(context.Context):
-		addr, fn = resolveFuncAddr(run), func(ctx context.Context) error {
-			run(ctx)
+		id, fn = name(target), func(ctx context.Context) error {
+			target(ctx)
 			return nil
 		}
 	case func() error:
-		addr, fn = resolveFuncAddr(run), func(_ context.Context) error {
-			return run()
+		id, fn = name(target), func(_ context.Context) error {
+			return target()
 		}
 	case func():
-		addr, fn = resolveFuncAddr(run), func(_ context.Context) error {
-			run()
+		id, fn = name(target), func(_ context.Context) error {
+			target()
 			return nil
 		}
+	default:
+		return nil,
+			fmt.Errorf(`%T is not a valid Mage target or dependency`, target)
 	}
-	return funcDep{addr, fn}
+	return targetDep{id, fn}, nil
 }
 
 func resolveFuncAddr(v interface{}) uintptr {
 	return reflect.ValueOf(v).Pointer()
 }
 
-// funcDep wraps a function to produce a Dependency.  This is automatically used by
-// mg.Deps and mg.ContextDeps to convert targets into dependencies.
-type funcDep struct {
-	// addr is the address of the function that was given to newFuncDep, and NOT the closure
-	// that may have been wrapped around the function.
-	addr uintptr
+// targetDep wraps a target to produce a Dependency.  This is automatically used
+// by mg.Deps and mg.ContextDeps to convert targets into dependencies.
+type targetDep struct {
+	// id is the name of the target function that was provided to newTargetDep
+	id string
 
-	// fn is either the original function that was given to newFuncDependency or a closure that
-	// will call that function.
+	// fn is either the original target that was given to newTargetDependency or
+	// a closure that will call that function.
 	fn func(ctx context.Context) error
 }
 
-// RunDependency implements Dependency using a global map of function addresses to sync.Once.
-// This ensures a dependency function is only run once.
-func (dep funcDep) RunDependency(ctx context.Context) error {
+// RunDependency implements Dependency using a global map of function addresses
+// to sync.Once.  This ensures a target is only run once.
+func (dep targetDep) RunDependency(ctx context.Context) error {
 	var err error
 	dep.runOnce().Do(func() {
 		err = dep.fn(ctx)
@@ -67,17 +77,16 @@ func (dep funcDep) RunDependency(ctx context.Context) error {
 	return err
 }
 
-func (dep funcDep) runOnce() *sync.Once {
-	//TODO(swdunlop): calculate address of the function.
+func (dep targetDep) runOnce() *sync.Once {
 	runOnceCtl.Lock()
 	defer runOnceCtl.Unlock()
-	ro := runOnceMap[dep.addr]
+	ro := runOnceMap[dep.id]
 	if ro == nil {
 		ro = new(sync.Once)
-		runOnceMap[dep.addr] = ro
+		runOnceMap[dep.id] = ro
 	}
 	return ro
 }
 
 var runOnceCtl sync.Mutex
-var runOnceMap = make(map[uintptr]*sync.Once)
+var runOnceMap = make(map[string]*sync.Once)

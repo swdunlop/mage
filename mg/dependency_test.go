@@ -15,10 +15,10 @@ func TestMakeDependency(t *testing.T) {
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
-		if fd.id != name(t1) {
+		if string(fd) != name(t1) {
 			t.Errorf(`expected address of dep to match target`)
 		}
-		if fd.fn == nil {
+		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
@@ -28,10 +28,10 @@ func TestMakeDependency(t *testing.T) {
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
-		if fd.id != name(t2) {
+		if string(fd) != name(t2) {
 			t.Errorf(`expected address of dep to match target`)
 		}
-		if fd.fn == nil {
+		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
@@ -41,10 +41,10 @@ func TestMakeDependency(t *testing.T) {
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
-		if fd.id != name(t3) {
+		if string(fd) != name(t3) {
 			t.Errorf(`expected address of dep to match target`)
 		}
-		if fd.fn == nil {
+		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
@@ -54,10 +54,10 @@ func TestMakeDependency(t *testing.T) {
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
-		if fd.id != name(t4) {
+		if string(fd) != name(t4) {
 			t.Errorf(`expected address of dep to match target`)
 		}
-		if name(fd.fn) != name(t4) {
+		if name(fd.getRun().fn) != name(t4) {
 			t.Errorf(`expected makeDependency to use the target as fn`)
 		}
 	})
@@ -131,8 +131,8 @@ func TestRunTargetDependency(t *testing.T) {
 			t.Error(`expected function to not run again`)
 			return
 		}
-		if err != nil {
-			t.Errorf(`unexpected error on repeat: %v`, err)
+		if err != errTest {
+			t.Errorf(`expected error on repeat`)
 		}
 	})
 	t.Run(`ContextErr`, func(t *testing.T) {
@@ -158,8 +158,8 @@ func TestRunTargetDependency(t *testing.T) {
 			t.Error(`expected function to not run again`)
 			return
 		}
-		if err != nil {
-			t.Errorf(`unexpected error on repeat: %v`, err)
+		if err != errTest {
+			t.Errorf(`expected error on repeat`)
 		}
 	})
 }

@@ -7,55 +7,102 @@ import (
 )
 
 // TestMakeDependency must pass for mg.Deps and mg.ContextDeps to reliably
+<<<<<<< HEAD
 // convert values to dependencies.
 func TestMakeDependency(t *testing.T) {
 	t.Run(`NoContextNoErr`, func(t *testing.T) {
 		d, _ := makeDependency(t1)
+=======
+// convert targets to dependencies.
+func TestMakeDependency(t *testing.T) {
+	t.Run(`NoContextNoErr`, func(t *testing.T) {
+		d, err := makeDependency(t1)
+		if err != nil {
+			panic(err)
+		}
+>>>>>>> master
 		fd, ok := d.(targetDep)
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
 		if string(fd) != name(t1) {
+<<<<<<< HEAD
 			t.Errorf(`expected address of dep to match target`)
+=======
+			t.Errorf(`expected name to match target`)
+>>>>>>> master
 		}
 		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
 	t.Run(`ContextNoErr`, func(t *testing.T) {
+<<<<<<< HEAD
 		d, _ := makeDependency(t2)
+=======
+		d, err := makeDependency(t2)
+		if err != nil {
+			panic(err)
+		}
+>>>>>>> master
 		fd, ok := d.(targetDep)
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
 		if string(fd) != name(t2) {
+<<<<<<< HEAD
 			t.Errorf(`expected address of dep to match target`)
+=======
+			t.Errorf(`expected name to match target`)
+>>>>>>> master
 		}
 		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
 	t.Run(`NoContextErr`, func(t *testing.T) {
+<<<<<<< HEAD
 		d, _ := makeDependency(t3)
+=======
+		d, err := makeDependency(t3)
+		if err != nil {
+			panic(err)
+		}
+>>>>>>> master
 		fd, ok := d.(targetDep)
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
 		if string(fd) != name(t3) {
+<<<<<<< HEAD
 			t.Errorf(`expected address of dep to match target`)
+=======
+			t.Errorf(`expected name to match target`)
+>>>>>>> master
 		}
 		if fd.getRun().fn == nil {
 			t.Errorf(`expected makeDependency to specify fn`)
 		}
 	})
 	t.Run(`ContextErr`, func(t *testing.T) {
+<<<<<<< HEAD
 		d, _ := makeDependency(t4)
+=======
+		d, err := makeDependency(t4)
+		if err != nil {
+			panic(err)
+		}
+>>>>>>> master
 		fd, ok := d.(targetDep)
 		if !ok {
 			t.Errorf(`expected makeDependency to produce a targetDep`)
 		}
 		if string(fd) != name(t4) {
+<<<<<<< HEAD
 			t.Errorf(`expected address of dep to match target`)
+=======
+			t.Errorf(`expected name to match target`)
+>>>>>>> master
 		}
 		if name(fd.getRun().fn) != name(t4) {
 			t.Errorf(`expected makeDependency to use the target as fn`)
@@ -201,3 +248,79 @@ func t4(ctx context.Context) error {
 	t4ctx = ctx
 	return t3err
 }
+
+// TestMakeNamespaceDependency is like TestMakeDependency for namespaces.
+func TestMakeNamespaceDependency(t *testing.T) {
+	foo := Foo{}
+	t.Run(`Foo.Bare`, func(t *testing.T) {
+		d, err := makeDependency(foo.Bare)
+		if err != nil {
+			panic(err)
+		}
+		fd, ok := d.(targetDep)
+		if !ok {
+			t.Errorf(`expected makeDependency to produce a targetDep`)
+		}
+		if string(fd) != name(foo.Bare) {
+			t.Errorf(`expected name to match target`)
+		}
+		if fd.getRun().fn == nil {
+			t.Errorf(`expected makeDependency to specify fn`)
+		}
+	})
+	t.Run(`Foo.BareCtx`, func(t *testing.T) {
+		d, err := makeDependency(foo.BareCtx)
+		if err != nil {
+			panic(err)
+		}
+		fd, ok := d.(targetDep)
+		if !ok {
+			t.Errorf(`expected makeDependency to produce a targetDep`)
+		}
+		if string(fd) != name(foo.BareCtx) {
+			t.Errorf(`expected name to match target`)
+		}
+		if fd.getRun().fn == nil {
+			t.Errorf(`expected makeDependency to specify fn`)
+		}
+	})
+	t.Run(`Foo.Error`, func(t *testing.T) {
+		d, err := makeDependency(foo.Error)
+		if err != nil {
+			panic(err)
+		}
+		fd, ok := d.(targetDep)
+		if !ok {
+			t.Errorf(`expected makeDependency to produce a targetDep`)
+		}
+		if string(fd) != name(foo.Error) {
+			t.Errorf(`expected name to match target`)
+		}
+		if fd.getRun().fn == nil {
+			t.Errorf(`expected makeDependency to specify fn`)
+		}
+	})
+	t.Run(`Foo.CtxError`, func(t *testing.T) {
+		d, err := makeDependency(foo.CtxError)
+		if err != nil {
+			panic(err)
+		}
+		fd, ok := d.(targetDep)
+		if !ok {
+			t.Errorf(`expected makeDependency to produce a targetDep`)
+		}
+		if string(fd) != name(foo.CtxError) {
+			t.Errorf(`expected name to match target`)
+		}
+	})
+}
+
+type Foo Namespace
+
+func (Foo) Bare() {}
+
+func (Foo) Error() error { return nil }
+
+func (Foo) BareCtx(context.Context) {}
+
+func (Foo) CtxError(context.Context) error { return nil }

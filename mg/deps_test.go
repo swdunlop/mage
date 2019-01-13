@@ -134,7 +134,7 @@ func TestDepTwoFatal(t *testing.T) {
 		actual := fmt.Sprint(v)
 		// order is non-deterministic, so check for both orders
 		if "ouch!\nbang!" != actual && "bang!\nouch!" != actual {
-			t.Fatalf(`expected to get "ouch!" and "bang!" but got "%s"`, actual)
+			t.Fatalf(`expected to get "ouch!" and "bang!" but got %q`, actual)
 		}
 		err, ok := v.(error)
 		if !ok {
